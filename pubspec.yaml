@@ -12,7 +12,7 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  intl: ^0.19.0
+  intl: ^0.20.2
   mat_month_picker_dialog: ^1.1.2
   sizer: ^2.0.15
   google_fonts: ^6.2.1
