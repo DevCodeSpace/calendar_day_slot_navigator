@@ -1,3 +1,11 @@
+## 0.0.2
+
+📅 `initialSelectedDate` property — allows setting a pre-selected date when the calendar is first displayed.
+
+🗓️ `showMonthInDayBox` property — optionally shows the abbreviated month name inside each day slot for clearer date context.
+
+---
+
 ## 0.0.1
 
 🌟 Initial release of CalendarDaySlotNavigator package

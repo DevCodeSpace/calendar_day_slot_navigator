@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mat_month_picker_dialog/mat_month_picker_dialog.dart';
-import 'package:sizer/sizer.dart';
 import 'calendar_day_slot_navigator.dart';
 import 'date_functions.dart';
 
@@ -62,6 +61,15 @@ class SelectedDateRangeWidget extends StatefulWidget {
   /// Aspect ratio for the height of day boxes.
   final double? dayBoxHeightAspectRatio;
 
+  /// show month in day box
+  final bool? showMonthInDayBox;
+
+  /// show arrow for change day slots
+  final bool showarrow;
+
+  /// initial selected date
+  final DateTime? initialSelectedDate;
+
   const SelectedDateRangeWidget(
       {super.key,
       this.slotLength,
@@ -79,7 +87,10 @@ class SelectedDateRangeWidget extends StatefulWidget {
       this.dayDisplayMode,
       this.textStyle,
       this.dayBorderWidth,
-      this.dayBoxHeightAspectRatio});
+      this.dayBoxHeightAspectRatio,
+      this.showMonthInDayBox = false,
+      this.showarrow = true,
+      this.initialSelectedDate});
 
   @override
   State<SelectedDateRangeWidget> createState() =>
@@ -103,7 +114,7 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
   int pageIndex = 0;
   DateTime nullDateTime = DateTime(0001, 1, 1);
   DateTime selectedDate = DateTime.now();
-  DateTime todayDate = DateTime.now();
+  // DateTime todayDate = DateTime.now();
 
   /// PageController to control the visible month.
   PageController pageController =
@@ -119,9 +130,9 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
     if (widget.slotLength != oldWidget.slotLength) {
       slotLengthLocal = widget.slotLength!;
       nullDateTime = DateTime(0001, 1, 1);
-      selectedDate = DateTime.now();
-      todayDate = DateTime.now();
-      getDatesInMonth(todayDate, MonthType.selected);
+      selectedDate = widget.initialSelectedDate ?? DateTime.now();
+      // todayDate = DateTime.now();
+      getDatesInMonth(selectedDate, MonthType.selected);
     }
     super.didUpdateWidget(oldWidget);
   }
@@ -129,7 +140,7 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
   @override
   void initState() {
     super.initState();
-
+    selectedDate = widget.initialSelectedDate ?? DateTime.now();
     slotLengthLocal = widget.slotLength!;
 
     /// initialize page view controller
@@ -139,7 +150,7 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
     dateSelected = DateTime.now().day;
 
     /// Get all dates from current month.
-    getDatesInMonth(DateTime.now(), MonthType.selected);
+    getDatesInMonth(selectedDate, MonthType.selected);
 
     /// Add listener to update arrows based on page position.
     pageController.addListener(
@@ -295,7 +306,7 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
   }
 
   /// Navigate to the previous month's view.
-  funcSetPreviousMonth() {
+  void funcSetPreviousMonth() {
     if (pageController.page == 0.0) {
       if (listDate.isNotEmpty) {
         DateTime varYesterdayDate =
@@ -306,7 +317,7 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
   }
 
   /// Navigate to the next month's view.
-  funcSetNextMonth() {
+  void funcSetNextMonth() {
     if (pageController.page == listDate.length - 1) {
       if (listDate.isNotEmpty) {
         DateTime varTomorrowDate = listDate.last
@@ -324,6 +335,7 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
     return LayoutBuilder(
       builder: (context, constraints) {
         double parentWidth = constraints.maxWidth;
+        final double sw = parentWidth / 100;
         return SizedBox(
             width: parentWidth,
             child: Column(
@@ -339,7 +351,7 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
                         child: Text(
                           widget.headerText!,
                           style: widget.textStyle!.copyWith(
-                              fontSize: 13.sp,
+                              fontSize: 14.0,
                               color: widget.activeColor,
                               fontWeight: FontWeight.w500),
                         ),
@@ -358,7 +370,8 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
                                     onSurface: widget.activeColor!,
                                     onPrimary: widget.deActiveColor!,
                                   ),
-                                  dialogBackgroundColor: widget.activeColor!,
+                                  dialogTheme: DialogThemeData(
+                                      backgroundColor: widget.activeColor!),
                                   textTheme: TextTheme(
                                     headlineSmall: widget.textStyle,
                                     titleLarge: widget.textStyle,
@@ -404,11 +417,17 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
                           }
                         },
                         child: Container(
-                          decoration: BoxDecoration(
-                            color: widget.activeColor,
-                            borderRadius: BorderRadius.circular(
-                                widget.monthYearTabBorderRadius!),
-                          ),
+                          decoration: !widget.isGradientColor!
+                              ? BoxDecoration(
+                                  color: widget.activeColor,
+                                  borderRadius: BorderRadius.circular(
+                                      widget.monthYearTabBorderRadius!),
+                                )
+                              : BoxDecoration(
+                                  gradient: widget.activeGradientColor,
+                                  borderRadius: BorderRadius.circular(
+                                      widget.monthYearTabBorderRadius!),
+                                ),
                           padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
                           child: Row(
                             children: [
@@ -416,13 +435,13 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
                                 selectMonth ?? currentMonth,
                                 style: widget.textStyle!.copyWith(
                                     color: widget.deActiveColor!,
-                                    fontSize: 9.sp),
+                                    fontSize: 12.0),
                               ),
                               const SizedBox(width: 5),
                               Icon(
                                 Icons.keyboard_arrow_down_rounded,
                                 color: widget.deActiveColor!,
-                                size: 3.w,
+                                size: sw * 3,
                               ),
                             ],
                           ),
@@ -444,8 +463,8 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
                                       onSurface: widget.activeColor!,
                                       surface: widget.deActiveColor!,
                                     ),
-                                    dialogBackgroundColor:
-                                        widget.deActiveColor!,
+                                    dialogTheme: DialogThemeData(
+                                        backgroundColor: widget.deActiveColor!),
                                     textTheme: TextTheme(
                                       headlineSmall: widget.textStyle,
                                       titleLarge: widget.textStyle,
@@ -493,11 +512,17 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
                             }
                           },
                           child: Container(
-                            decoration: BoxDecoration(
-                              color: widget.activeColor,
-                              borderRadius: BorderRadius.circular(
-                                  widget.monthYearTabBorderRadius!),
-                            ),
+                            decoration: !widget.isGradientColor!
+                                ? BoxDecoration(
+                                    color: widget.activeColor,
+                                    borderRadius: BorderRadius.circular(
+                                        widget.monthYearTabBorderRadius!),
+                                  )
+                                : BoxDecoration(
+                                    gradient: widget.activeGradientColor,
+                                    borderRadius: BorderRadius.circular(
+                                        widget.monthYearTabBorderRadius!),
+                                  ),
                             padding: const EdgeInsets.fromLTRB(10, 5, 10, 5),
                             child: Row(
                               children: [
@@ -505,13 +530,13 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
                                   year.toString(),
                                   style: widget.textStyle!.copyWith(
                                       color: widget.deActiveColor!,
-                                      fontSize: 9.sp),
+                                      fontSize: 12.0),
                                 ),
                                 const SizedBox(width: 5),
                                 Icon(
                                   Icons.keyboard_arrow_down_rounded,
                                   color: widget.deActiveColor!,
-                                  size: 3.w,
+                                  size: sw * 3,
                                 ),
                               ],
                             ),
@@ -536,31 +561,37 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
                               ? Text(
                                   "",
                                   style: widget.textStyle!.copyWith(
-                                    fontSize: 8.sp,
+                                    fontSize: 11.0,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
                                 )
                               : const SizedBox(),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                pageController.previousPage(
-                                  duration: const Duration(milliseconds: 500),
-                                  curve: Curves.ease,
-                                );
-                              });
-                              funcSetPreviousMonth();
-                            },
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 1.w),
-                              child: Icon(
-                                Icons.arrow_back_ios_outlined,
-                                color: widget.activeColor,
-                                size: 5.w,
-                              ),
-                            ),
-                          ),
+                          widget.showarrow
+                              ? GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      pageController.previousPage(
+                                        duration:
+                                            const Duration(milliseconds: 500),
+                                        curve: Curves.ease,
+                                      );
+                                    });
+                                    funcSetPreviousMonth();
+                                  },
+                                  child: Padding(
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: sw),
+                                    child: Icon(
+                                      Icons.arrow_back_ios,
+                                      color: widget.activeColor,
+                                      size: sw * 5,
+                                    ),
+                                  ),
+                                )
+                              : SizedBox(
+                                  width: sw * 5,
+                                ),
                         ],
                       ),
 
@@ -633,13 +664,18 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
                                                                       .textStyle!
                                                                       .copyWith(
                                                                     fontSize:
-                                                                        8.sp,
+                                                                        11.0,
                                                                     color: isActive
-                                                                        ? widget
-                                                                            .activeColor
-                                                                        : widget
-                                                                            .activeColor!
-                                                                            .withOpacity(.5),
+                                                                        ? (DateFunctions.isToDayDate(date)
+                                                                            ? widget.activeColor // Highlight today's weekday
+                                                                            : widget.activeColor)
+                                                                        : widget.activeColor!.withValues(alpha: 0.5),
+                                                                    fontWeight: DateFunctions.isToDayDate(
+                                                                            date)
+                                                                        ? FontWeight
+                                                                            .bold
+                                                                        : FontWeight
+                                                                            .normal, // Bold for today's weekday
                                                                   ),
                                                                   overflow:
                                                                       TextOverflow
@@ -654,18 +690,38 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
                                                                         ? BoxDecoration(
                                                                             color: isSelected
                                                                                 ? widget.activeColor
-                                                                                : widget.deActiveColor,
+                                                                                : DateFunctions.isToDayDate(date)
+                                                                                    ? widget.activeColor!.withValues(alpha: 0.3)
+                                                                                    : widget.deActiveColor,
                                                                             borderRadius: BorderRadius.circular(widget.dayBoxBorderRadius!),
                                                                             border: Border.all(
-                                                                              width: widget.dayBorderWidth!,
-                                                                              color: !isSelected ? widget.activeColor! : widget.activeColor!.withOpacity(0.1),
+                                                                              width: DateFunctions.isToDayDate(date) ? (widget.dayBorderWidth! + 1) : widget.dayBorderWidth!,
+                                                                              color: DateFunctions.isToDayDate(date)
+                                                                                  ? widget.activeColor!
+                                                                                  : !isSelected
+                                                                                      ? widget.activeColor!
+                                                                                      : widget.activeColor!.withValues(alpha: 0.1),
                                                                             ))
                                                                         : BoxDecoration(
-                                                                            gradient: isSelected ? widget.activeGradientColor : widget.deActiveGradientColor,
+                                                                            gradient: isSelected
+                                                                                ? widget.activeGradientColor
+                                                                                : DateFunctions.isToDayDate(date)
+                                                                                    ? LinearGradient(
+                                                                                        colors: widget.activeGradientColor!.colors.map((color) => color.withValues(alpha: 0.3)).toList(),
+                                                                                        begin: widget.activeGradientColor!.begin,
+                                                                                        end: widget.activeGradientColor!.end,
+                                                                                        stops: widget.activeGradientColor!.stops,
+                                                                                        tileMode: widget.activeGradientColor!.tileMode,
+                                                                                      )
+                                                                                    : widget.deActiveGradientColor,
                                                                             borderRadius: BorderRadius.circular(widget.dayBoxBorderRadius!),
                                                                             border: Border.all(
-                                                                              width: widget.dayBorderWidth!,
-                                                                              color: !isSelected ? widget.activeColor! : widget.activeColor!.withOpacity(0.1),
+                                                                              width: DateFunctions.isToDayDate(date) ? (widget.dayBorderWidth! + 1) : widget.dayBorderWidth!,
+                                                                              color: DateFunctions.isToDayDate(date)
+                                                                                  ? widget.activeColor!
+                                                                                  : !isSelected
+                                                                                      ? widget.activeColor!
+                                                                                      : widget.activeColor!.withValues(alpha: 0.1),
                                                                             )),
                                                                     child:
                                                                         Center(
@@ -682,14 +738,17 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
                                                                               .textStyle!
                                                                               .copyWith(
                                                                             fontSize:
-                                                                                13.sp,
+                                                                                14.0,
                                                                             color: !isActive
-                                                                                ? widget.activeColor!.withOpacity(0.5)
+                                                                                ? widget.activeColor!.withValues(alpha: 0.5)
                                                                                 : isSelected
                                                                                     ? widget.deActiveColor
-                                                                                    : widget.activeColor,
-                                                                            fontWeight:
-                                                                                FontWeight.bold,
+                                                                                    : DateFunctions.isToDayDate(date)
+                                                                                        ? widget.activeColor // Highlight today's date
+                                                                                        : widget.activeColor,
+                                                                            fontWeight: DateFunctions.isToDayDate(date) || isSelected
+                                                                                ? FontWeight.bold
+                                                                                : FontWeight.normal,
                                                                           ),
                                                                           overflow:
                                                                               TextOverflow.ellipsis,
@@ -701,8 +760,7 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
                                                                   ),
                                                                 ),
                                                                 const SizedBox(
-                                                                  height: 1,
-                                                                )
+                                                                    height: 1)
                                                               ],
                                                             )
                                                           :
@@ -713,39 +771,50 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
                                                                       .isGradientColor!
                                                                   ? BoxDecoration(
                                                                       color: isSelected
-                                                                          ? widget
-                                                                              .activeColor
-                                                                          : widget
-                                                                              .deActiveColor,
+                                                                          ? widget.activeColor
+                                                                          : DateFunctions.isToDayDate(date)
+                                                                              ? widget.activeColor!.withValues(alpha: 0.3)
+                                                                              : widget.deActiveColor,
                                                                       borderRadius:
-                                                                          BorderRadius.circular(widget
-                                                                              .dayBoxBorderRadius!),
+                                                                          BorderRadius.circular(
+                                                                              widget.dayBoxBorderRadius!),
                                                                       border:
                                                                           Border
                                                                               .all(
-                                                                        width: widget
-                                                                            .dayBorderWidth!,
-                                                                        color: !isSelected
+                                                                        width: DateFunctions.isToDayDate(date)
+                                                                            ? (widget.dayBorderWidth! +
+                                                                                1)
+                                                                            : widget.dayBorderWidth!,
+                                                                        color: DateFunctions.isToDayDate(date)
                                                                             ? widget.activeColor!
-                                                                            : widget.activeColor!.withOpacity(0.1),
-                                                                      ))
+                                                                            : !isSelected
+                                                                                ? widget.activeColor!
+                                                                                : widget.activeColor!.withValues(alpha: 0.1),
+                                                                      ),
+                                                                    )
                                                                   : BoxDecoration(
                                                                       gradient: isSelected
-                                                                          ? widget
-                                                                              .activeGradientColor
-                                                                          : widget
-                                                                              .deActiveGradientColor,
-                                                                      borderRadius:
-                                                                          BorderRadius.circular(widget
-                                                                              .dayBoxBorderRadius!),
-                                                                      border:
-                                                                          Border
-                                                                              .all(
-                                                                        width: widget
-                                                                            .dayBorderWidth!,
-                                                                        color: !isSelected
+                                                                          ? widget.activeGradientColor
+                                                                          : DateFunctions.isToDayDate(date)
+                                                                              ? LinearGradient(
+                                                                                  colors: widget.activeGradientColor!.colors.map((color) => color.withValues(alpha: 0.3)).toList(),
+                                                                                  begin: widget.activeGradientColor!.begin,
+                                                                                  end: widget.activeGradientColor!.end,
+                                                                                  stops: widget.activeGradientColor!.stops,
+                                                                                  tileMode: widget.activeGradientColor!.tileMode,
+                                                                                )
+                                                                              : widget.deActiveGradientColor,
+                                                                      borderRadius: BorderRadius.circular(widget.dayBoxBorderRadius!),
+                                                                      border: Border.all(
+                                                                        width: DateFunctions.isToDayDate(date)
+                                                                            ? (widget.dayBorderWidth! +
+                                                                                1)
+                                                                            : widget.dayBorderWidth!,
+                                                                        color: DateFunctions.isToDayDate(date)
                                                                             ? widget.activeColor!
-                                                                            : widget.activeColor!.withOpacity(0.1),
+                                                                            : !isSelected
+                                                                                ? widget.activeColor!
+                                                                                : widget.activeColor!.withValues(alpha: 0.1),
                                                                       )),
                                                               child: Column(
                                                                 crossAxisAlignment:
@@ -768,9 +837,12 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
                                                                           .textStyle!
                                                                           .copyWith(
                                                                         fontSize:
-                                                                            8.sp,
+                                                                            11.0,
+                                                                        fontWeight: DateFunctions.isToDayDate(date)
+                                                                            ? FontWeight.bold
+                                                                            : FontWeight.normal, // Bold for today's weekday
                                                                         color: !isActive
-                                                                            ? widget.activeColor!.withOpacity(0.5)
+                                                                            ? widget.activeColor!.withValues(alpha: 0.5)
                                                                             : isSelected
                                                                                 ? widget.deActiveColor
                                                                                 : widget.activeColor,
@@ -793,14 +865,14 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
                                                                           .textStyle!
                                                                           .copyWith(
                                                                         color: !isActive
-                                                                            ? widget.activeColor!.withOpacity(0.5)
+                                                                            ? widget.activeColor!.withValues(alpha: 0.5)
                                                                             : isSelected
                                                                                 ? widget.deActiveColor
                                                                                 : widget.activeColor,
                                                                         fontWeight:
                                                                             FontWeight.bold,
                                                                         fontSize:
-                                                                            10.sp,
+                                                                            13.0,
                                                                       ),
                                                                       overflow:
                                                                           TextOverflow
@@ -809,6 +881,31 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
                                                                           1,
                                                                     ),
                                                                   ),
+                                                                  widget.showMonthInDayBox!
+                                                                      ? FittedBox(
+                                                                          fit: BoxFit
+                                                                              .scaleDown,
+                                                                          // Adjusts the text to fit the box
+                                                                          child:
+                                                                              Text(
+                                                                            DateFormat("MMM").format(date).toString(),
+                                                                            style:
+                                                                                widget.textStyle!.copyWith(
+                                                                              fontSize: 11.0,
+                                                                              fontWeight: DateFunctions.isToDayDate(date) ? FontWeight.bold : FontWeight.normal, // Bold for today's weekday
+                                                                              color: !isActive
+                                                                                  ? widget.activeColor!.withValues(alpha: 0.5)
+                                                                                  : isSelected
+                                                                                      ? widget.deActiveColor
+                                                                                      : widget.activeColor,
+                                                                            ),
+                                                                            overflow:
+                                                                                TextOverflow.ellipsis,
+                                                                            maxLines:
+                                                                                1,
+                                                                          ),
+                                                                        )
+                                                                      : const SizedBox(),
                                                                 ],
                                                               ),
                                                             ),
@@ -829,31 +926,37 @@ class _SelectedDateRangeWidgetState extends State<SelectedDateRangeWidget> {
                               ? Text(
                                   "",
                                   style: widget.textStyle!.copyWith(
-                                    fontSize: 8.sp,
+                                    fontSize: 11.0,
                                   ),
                                   overflow: TextOverflow.ellipsis,
                                   maxLines: 1,
                                 )
                               : const SizedBox(),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                pageController.nextPage(
-                                  duration: const Duration(milliseconds: 500),
-                                  curve: Curves.ease,
-                                );
-                              });
-                              funcSetNextMonth();
-                            },
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 1.w),
-                              child: Icon(
-                                Icons.arrow_forward_ios_outlined,
-                                color: widget.activeColor,
-                                size: 5.w,
-                              ),
-                            ),
-                          ),
+                          widget.showarrow
+                              ? GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      pageController.nextPage(
+                                        duration:
+                                            const Duration(milliseconds: 500),
+                                        curve: Curves.ease,
+                                      );
+                                    });
+                                    funcSetNextMonth();
+                                  },
+                                  child: Padding(
+                                    padding:
+                                        EdgeInsets.symmetric(horizontal: sw),
+                                    child: Icon(
+                                      Icons.arrow_forward_ios,
+                                      color: widget.activeColor,
+                                      size: sw * 5,
+                                    ),
+                                  ),
+                                )
+                              : SizedBox(
+                                  width: sw * 5,
+                                ),
                         ],
                       ),
                     ],
