@@ -63,6 +63,7 @@ Here's a simple example to get you started:
 ```dart
 CalendarDaySlotNavigator(
   slotLength: 5,
+  initialSelectedDate: DateTime.now(),
   dayDisplayMode: DayDisplayMode.outsideDateBox,
   headerText: "Select Date",
   onDateSelect: (selectedDate) {
@@ -79,6 +80,7 @@ Add beautiful gradients and custom styling:
 CalendarDaySlotNavigator(
   slotLength: 7,
   dayBoxHeightAspectRatio: 8,
+  initialSelectedDate: DateTime.now(),
   dayDisplayMode: DayDisplayMode.insideDateBox,
   isGradientColor: true,
   activeGradientColor: LinearGradient(
@@ -158,6 +160,7 @@ CalendarDaySlotNavigator(
 | dateSelectionType | `DateSelectionType` | 🎯 Controls which dates can be selected |
 | rangeDates | `List<DateTime>?` | 📅 List of dates for range-based selection types |
 | onDateSelect | `Function(DateTime)?` | 🖱️ Callback function when a date is selected |
+| initialSelectedDate | `DateTime` | 📍 Sets the default selected date when calendar first loads |
 
 ### Date Selection Types Explained
 
